@@ -1,140 +1,152 @@
 ---
-name: bci-dataset-discovery
-description: Discover, screen, and summarize BCI/neural datasets from dataset portals and literature. Use when Codex is asked to find datasets by topic, seed portals, or reference datasets, especially EEG/BCI motor imagery, motor execution, upper-limb, grasping, robotic hand, dexterous hand, neuroprosthetic, or rehabilitation-control datasets; classify public-download versus registration/application/restricted access; rank task relevance; and produce staged tables for human screening and later detailed dataset-dimension extraction.
+name: dataset-research
+description: Research, discover, screen, and maintain datasets for a user-specified topic using a four-layer discovery network. Use when Codex is asked to find datasets from public websites, dataset collections, or research papers; search general dataset engines, domain-specific repositories, and scientific data hosts; prioritize local memory before web search; audit public-download versus registration/application/restricted access; rank relevance; use the top-cited relevant papers to extract dataset dimensions such as subjects, tasks, trials, channels, sampling rate, labels, file formats, and access; deduplicate and maintain tables; and propose or generate approved visualization charts.
 ---
 
-# BCI Dataset Discovery
+# Dataset Research
 
 ## Core Rule
 
-Use a staged, provenance-first workflow:
+Run dataset research as a staged, review-gated workflow:
 
-1. Find candidate portals and dataset records.
-2. Screen by task topic and relevance.
-3. Audit access and download requirements.
-4. Output a compact candidate table for human selection.
-5. Only after the user approves candidates, extract detailed dataset dimensions from the dataset page and reference paper.
-6. After the user reviews additions/deletions/changes, output the final table.
+1. Read local memory and previous dataset registries before searching.
+2. Search a four-layer discovery network.
+3. Produce a candidate dataset table with brief descriptions.
+4. Audit public availability and access requirements.
+5. Rank relevance and identify the top-cited relevant papers.
+6. Extract core dataset dimensions only for approved or high-priority candidates.
+7. Deduplicate, apply user add/delete/update decisions, and maintain a clean table.
+8. Propose visualizations; generate charts only after the user approves the chart plan.
 
-Do not jump straight to a final dimension table unless the user explicitly asks to skip review gates.
+Do not skip the human review gates unless the user explicitly asks for a one-pass final table.
 
-## Evidence Order
+## Memory-First Behavior
 
-Prefer sources in this order:
+Before web search, inspect available local memory or project artifacts:
 
-1. Official dataset page or repository metadata.
-2. Platform API or file manifest.
-3. Paper Data Availability / Data Records section.
-4. Official benchmark adapter docs such as MOABB, NEMAR, EEGDash.
-5. Secondary lists only as search hints.
+- Codex memory surfaced in context.
+- Existing project files such as state/dataset_registry.csv, state/dataset_memory.*, docs/resource_audit.*, or prior candidate tables.
+- Skill references in references/portal-catalog.md and references/table-schemas.md.
 
-Mark important claims with evidence tags: [Data], [Paper], [Repo], [Index], [Inference], [Assumption], [Unknown].
+After each search pass, record new reusable knowledge when a memory mechanism is available. If direct memory writing is not available, include a short "memory_update" block in the response or update the project dataset registry if the user asked for persistent files.
 
-## Workflow
+Record only stable facts in memory: useful portals, exact dataset names, canonical URLs, DOI, access class, and caveats. Do not store unsupported guesses.
 
-### 1. Scope Intake
+## Four-Layer Discovery Network
 
-Extract from the user:
+Read references/portal-catalog.md before broad searches.
 
-- Topic terms: e.g. motor imagery, motor execution, grasping, hand opening/closing, individual fingers, robotic hand control.
-- Seed portals: e.g. OpenNeuro, Figshare, NEMAR, PhysioNet, Zenodo.
-- Seed datasets: e.g. WBCIC-SHU, Ding robotic hand, EEGMMIDB.
-- Inclusion constraints: modality, public only, patient/healthy, format, size, language, download region.
-- Exclusion constraints: non-EEG, non-human, invasive-only, non-downloadable, synthetic-only.
+### Layer 1: General Dataset Search
 
-If scope is ambiguous, make a conservative search and state assumptions.
+Use broad dataset search engines to map the search space:
 
-### 2. Portal Sweep
+- Google Dataset Search
+- DataCite Commons
+- OpenAIRE Explore
+- re3data for repository discovery
+- OpenAlex, Semantic Scholar, or Crossref for paper/data links when available
 
-Read references/portal-catalog.md before broad portal discovery or when choosing where to search.
+Goal: find candidate dataset names, DOI records, host repositories, and high-citation papers.
 
-Search both platform names and task terms. Use platform-native pages/APIs when available. Keep a portal table with:
+### Layer 2: Domain-Specific Data Repositories
 
-portal, why_relevant, search_terms, access_pattern, download_pattern, notes.
+Search repositories specific to the topic. For EEG/BCI/neural data, prioritize:
 
-Do not treat a portal as proof that a dataset matches the task; portal hits are only candidates.
+- OpenNeuro
+- NEMAR
+- EEGDash
+- PhysioNet
+- DANDI
+- CRCNS
+- GIN/G-Node
+- MOABB and BNCI when they have not already been searched by the user
 
-### 3. Candidate Screening
+For other domains, infer the appropriate specialist repositories and add them to the search log.
 
-For each candidate, capture only enough information for screening:
+### Layer 3: Scientific Data Hosting Sites
 
-- dataset name and URL
-- source portal
-- DOI or paper
-- modality and paradigm
-- task labels/effectors
-- rough subject/session scale
-- robot/online feedback/control relevance
-- access status
-- relevance score
+Search general scientific data hosts and institutional repositories:
 
-Score task relevance on 0-5:
+- Figshare, Figshare+, and institutional Figshare instances such as KiltHub
+- Zenodo
+- OSF
+- Harvard Dataverse and other Dataverse instances
+- Dryad
+- GigaDB
+- Mendeley Data
+- Synapse
+- Hugging Face Datasets and Kaggle only as secondary or mirror leads unless they are the official host
 
-- 5: exact match, e.g. EEG MI/ME plus real robotic hand/finger/dexterous control.
-- 4: upper-limb or grasping MI/ME, good proxy for robotic hand control.
-- 3: generic left/right hand MI or ME, useful baseline/pretraining.
-- 2: adjacent BCI/neurofeedback/multimodal motor task.
-- 1: weakly related EEG but not motor control.
-- 0: out of scope.
+Goal: verify actual files, licenses, size, download methods, versions, and checksums when available.
 
-### 4. Access Audit
+### Layer 4: Literature and Citation Validation
 
-Classify access as one of:
+For the filtered candidate set, find the most relevant and highest-cited papers. Prefer official paper pages, Crossref/OpenAlex/Semantic Scholar, publisher pages, or dataset citations.
 
-- public_direct: direct browser/API/wget/download button works, no account noted.
-- public_cli: public but best retrieved through DataLad, git-annex, platform CLI, S3, or API.
+Use the top five relevant high-citation papers to extract core data dimensions. If citation counts are unavailable or inconsistent, rank by topic relevance, official data availability, publication venue, and reuse evidence, then mark the ranking basis.
+
+## Screening and Review Gates
+
+### Candidate Table Gate
+
+Before deep extraction, output a compact candidate table with dataset name, URL, source portal, topic match, brief description, access class, relevance score, citation/paper signal, and keep/delete/maybe.
+
+Ask the user to approve, delete, merge, rename, or add candidates.
+
+### Access Audit Gate
+
+Classify access as:
+
+- public_direct: direct download/API/wget/browser download, no account noted.
+- public_cli: public but best via DataLad, git-annex, platform CLI, S3, or API.
 - public_registration: public but requires login, terms checkbox, or platform account.
-- application_required: explicit request form, data use agreement, institutional approval, or credentialed access.
-- restricted: closed, private, embargoed, or no downloadable files.
-- unknown: evidence insufficient.
+- application_required: explicit application, data use agreement, credentialing, IRB/institutional approval, or manual access request.
+- restricted: closed, private, embargoed, or no files.
+- unknown: insufficient evidence.
 
-Record whether the page mentions password/encryption, license, file size, file count, checksum, and resumable download support. If files are large, prefer manifest/API checks before downloading.
+Do not label a dataset as public just because a paper exists; verify the dataset host.
 
-### 5. First Output: Human Screening Table
+### Dimension Extraction Gate
 
-Use references/table-schemas.md for columns. Keep this table compact. Include enough evidence links for the user to accept/reject candidates.
+After approval, extract core dimensions from official data pages and reference papers. Use unknown for missing fields. Separate evidence from inference.
 
-End with a clear review request such as: "Please mark keep, delete, add, rename, or maybe; after approval I will extract core dimensions."
+Core dimensions include subjects, demographics, modality, task type, labels, session/run/trial design, trial length, event timing, channels, sampling rate, hardware, file format, raw/preprocessed availability, access/license, and download method.
 
-### 6. Approved Candidate Dimension Extraction
+### Deduplication and Table Maintenance Gate
 
-After the user approves candidates, extract detailed dimensions from the official data page and paper:
+Deduplicate by DOI, canonical dataset URL, title variants, authors, repository IDs, and file manifests. Merge duplicates instead of listing the same dataset from OpenNeuro/NEMAR/EEGDash/Figshare multiple times unless mirrors differ materially.
 
-- subjects and demographics
-- health condition
-- modality and channels
-- montage/reference/ground
-- sampling rate
-- task paradigm and labels
-- trial/session/run design
-- event markers and timing
-- online feedback/robot/control details
-- raw/preprocessed availability
-- format and file organization
-- license/access/download method
-- dataset size/checksums if available
-- known caveats, inconsistencies, or unknowns
+Support CRUD operations:
 
-Separate facts from assumptions. If a field is absent from official sources, write unknown, not a guess.
+- Add missing datasets.
+- Delete out-of-scope entries.
+- Update dimensions or access class.
+- Merge duplicates.
+- Split entries when one paper contains multiple distinct datasets.
 
-### 7. Final Review and CRUD
+## Visualization Planning
 
-After producing the detailed table, support user-directed add/delete/change operations:
+After the maintained table passes user review, propose visualizations before generating them.
 
-- Add a candidate and fill missing dimensions.
-- Delete irrelevant candidates.
-- Rename or merge duplicate dataset records.
-- Update access status after testing download/API.
-- Add columns requested by the user.
+Good default charts:
 
-Only call the result final after the user's review pass is handled or the user explicitly says no review is needed.
+- Task type vs participant count: bar chart or pie chart.
+- Access status distribution: donut or stacked bar.
+- Modality by task type: heatmap.
+- Dataset source portal by relevance score: bar chart.
+- Citation count vs relevance score: scatter plot.
+- Participant count vs trial count: bubble chart.
+- Dataset-year timeline: timeline or line chart.
+- Dataset relationship graph: nodes for papers, repositories, datasets, mirrors, and task types.
+
+Generate visualizations only after the user approves the chart list and data fields.
 
 ## Output Discipline
 
-- Prefer tables over long prose.
-- Keep citations or source links next to the claim they support.
-- Distinguish dataset host from paper host.
-- Flag stale or secondary-source-only results.
-- For domestic server downloads, include download method notes but do not start large downloads without confirmation.
-- For human-subject data, respect license and do not recommend unofficial redistribution.
+- Prefer structured tables over prose.
+- Keep source links close to claims.
+- Mark evidence with [Data], [Paper], [Repo], [Index], [Inference], [Assumption], or [Unknown].
+- Distinguish primary dataset hosts from mirrors and indexes.
+- For large downloads, stop at manifest/API validation unless the user confirms downloading.
+- For human-subject datasets, preserve license and access constraints; do not suggest unofficial redistribution.
 
