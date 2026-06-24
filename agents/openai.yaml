@@ -1,0 +1,4 @@
+interface:
+  display_name: "BCI Dataset Discovery"
+  short_description: "Find and screen BCI/EEG datasets"
+  default_prompt: "Use $bci-dataset-discovery to find public EEG motor imagery and motor execution datasets for robotic hand control."
